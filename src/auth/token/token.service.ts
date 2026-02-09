@@ -7,6 +7,7 @@ import { TokensResDto } from '../dto/response/tokens-res.dto';
 import { CacheService } from '../../core/cache/cache.service';
 import { UserRole } from '@prisma/client';
 import { createHash } from 'node:crypto';
+import { UserRepository } from '../../user/user.repository';
 
 interface TokenPayload {
   sub: string;
@@ -24,6 +25,7 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly cache: CacheService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   generateAccessToken(actor: AuthenticatedUser): string {
@@ -39,6 +41,8 @@ export class TokenService {
     deviceId: string,
   ): Promise<string> {
     const duration = this.config.get('REFRESH_TOKEN_EXPIRED');
+
+    await this.userRepository.createUserDevice(actor.id, deviceId);
 
     const token = this.createToken(
       actor,
@@ -74,7 +78,7 @@ export class TokenService {
     actor: AuthenticatedUser,
     expiresIn: string,
     secret: string,
-  ) {
+  ): string {
     const payload: TokenPayload = { sub: actor.id, role: actor.role };
 
     const seconds = ms(expiresIn as StringValue) / 1000;
