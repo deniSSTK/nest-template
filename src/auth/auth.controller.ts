@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AccountReqDto } from './dto/request/account-req.dto';
 import {
@@ -8,11 +16,23 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthResDto } from './dto/response/auth-res.dto';
+import { AuthUser } from './decorators/auth-user.decorator';
+import { AuthenticatedUser } from './dto/auth-user.dto';
+import { TokenGuard } from './token/token.guard';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('/me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get authenticated user' })
+  @ApiOkResponse({ type: AuthenticatedUser })
+  @UseGuards(TokenGuard)
+  getMe(@AuthUser() actor: AuthenticatedUser) {
+    return actor;
+  }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)

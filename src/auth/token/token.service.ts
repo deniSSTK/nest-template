@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '../../core/config/config.service';
 import { TokensResDto } from '../dto/response/tokens-res.dto';
 import { CacheService } from '../../core/cache/cache.service';
@@ -14,6 +14,8 @@ export interface TokenPayload {
 
 @Injectable()
 export class TokenService {
+  private readonly logger = new Logger(TokenService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
@@ -40,6 +42,17 @@ export class TokenService {
     );
 
     return { accessToken, refreshToken };
+  }
+
+  async getAccessPayload(token: string): Promise<TokenPayload> {
+    try {
+      return await this.jwtService.verifyAsync(token, {
+        secret: this.config.get('JWT_ACCESS_SECRET'),
+      });
+    } catch (error) {
+      this.logger.warn('Invalid access token', error);
+      throw new UnauthorizedException('Invalid access token');
+    }
   }
 
   private async createAndSaveRefreshToken(
