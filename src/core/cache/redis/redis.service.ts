@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { createClient, RedisClientType } from 'redis';
 import { ConfigService } from '../../config/config.service';
-import { CacheService } from '../cache.service';
+import { CacheService, ICachePipeline } from '../cache.service';
 
 @Injectable()
 export class RedisService
@@ -93,5 +93,35 @@ export class RedisService
     } else {
       await this.client.set(fullKey, value);
     }
+  }
+
+  pipeline(): ICachePipeline {
+    const multi = this.client.multi();
+
+    const proxy: ICachePipeline = {
+      set: (key, value) => {
+        multi.set(this.buildKey(key), value);
+        return proxy;
+      },
+      setEx: (key, seconds, value) => {
+        multi.setEx(this.buildKey(key), seconds, value);
+        return proxy;
+      },
+      del: (key) => {
+        multi.del(this.buildKey(key));
+        return proxy;
+      },
+      zAdd: (key, score, member) => {
+        multi.zAdd(this.buildKey(key), { score, value: member });
+        return proxy;
+      },
+      expire: (key, seconds) => {
+        multi.expire(this.buildKey(key), seconds);
+        return proxy;
+      },
+      exec: () => multi.exec(),
+    };
+
+    return proxy;
   }
 }

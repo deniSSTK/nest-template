@@ -13,4 +13,13 @@ export class UserRepository {
       },
     });
   }
+
+  async saveUserDevice(userId: string, deviceId: string) {
+    return this.prisma.userDevices.create({
+      data: {
+        userId,
+        id: deviceId,
+      },
+    });
+  }
 }
