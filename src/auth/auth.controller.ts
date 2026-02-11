@@ -25,7 +25,7 @@ import { TokenGuard } from './token/token.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('/me')
+  @Get('me')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get authenticated user' })
   @ApiOkResponse({ type: AuthenticatedUser })

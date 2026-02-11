@@ -92,6 +92,6 @@ export class TokenService {
   }
 
   private buildDeviceIndexKey(userId: string) {
-    return `refresh:devices:${userId}`;
+    return `devices:index:${userId}`;
   }
 }
